@@ -33,7 +33,7 @@ function! s:fzf_dir_sink(directory, val, bang, opts)
 		let fname = fnamemodify(a:directory . '/' . argument, ':p')
 		" let fname = fnamemodify(argument, ':p')
 	endif
-	echom fname
+	" echom fname
 
 	" Handle multiple lines in the output
 
@@ -50,7 +50,7 @@ endfunction
 function! s:fzf_dir_worker(bang, directory, opts)
 	" let a:opts.source = 'cd ' . a:directory . ' && echo -e ".\n/\n~/" && bfind 1'
 	" let a:opts.source = 'echo -e ".\n..\n/\n~/" && bfind 1 ' . a:directory
-	echom a:directory
+	" echom a:directory
 	" let a:opts.source = 'echo -e ".\n..\n/\n~/" && cd "' . a:directory . '" && ls --group-directories-first -Q1 "' . a:directory . '" | xargs -L 1 readlink -f --'
 	" let a:opts.source = 'echo -e ".\n..\n/\n~/" && ls --group-directories-first -a "' . a:directory . '"'
 	let a:opts.source = 'echo -e "/\n~/" && ls --group-directories-first -a "' . a:directory . '"'
