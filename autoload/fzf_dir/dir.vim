@@ -30,7 +30,8 @@ function! s:fzf_dir_sink(directory, val, bang, opts)
 		endif
 		let fname = fnamemodify(directory, ':h:p')
 	else
-		let fname = fnamemodify(a:directory . '/' . argument, ':p')
+		let fname = fnamemodify((a:directory == '/' ? '' : a:directory). '/' . argument, ':p')
+		echom fname
 		" let fname = fnamemodify(argument, ':p')
 	endif
 	" echom fname
