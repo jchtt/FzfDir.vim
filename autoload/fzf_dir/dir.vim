@@ -12,17 +12,26 @@ if !exists('g:fzf_dir_actions')
 endif
 
 function! s:fzf_dir_sink(directory, val, bang, opts)
+	" echom 'directory'
+	" echom a:directory
+	let query = remove(a:val, 0)
+	" echom 'query'
+	" echom query
 	let k = remove(a:val, 0)
 	let cmd = get(g:fzf_dir_actions, k, 'edit')
 	" echom a:val
-	let argument = remove(a:val, 0)
+	if len(a:val) >= 1
+		let argument = remove(a:val, 0)
+	else
+		let argument = ''
+	endif
 	" echom argument
 
-	if argument == '/'
+	if query == '/'
 		let fname = fnamemodify('/', ':p')
-	elseif argument == '~/'
+	elseif query == '~'
 		let fname = fnamemodify('~/', ':p')
-	elseif argument == '..'
+	elseif query == '..'
 		if a:directory =~ '/$' && a:directory != '/'
 			let directory = a:directory[:-2]
 		else
@@ -31,14 +40,14 @@ function! s:fzf_dir_sink(directory, val, bang, opts)
 		let fname = fnamemodify(directory, ':h:p')
 	else
 		let fname = fnamemodify((a:directory == '/' ? '' : a:directory). '/' . argument, ':p')
-		echom fname
+		" echom fname
 		" let fname = fnamemodify(argument, ':p')
 	endif
 	" echom fname
 
 	" Handle multiple lines in the output
 
-	if argument == "."
+	if query == "."
 		execute cmd a:directory
 	elseif isdirectory(fname)
 		call s:fzf_dir_worker(a:bang, fname, a:opts)
@@ -54,12 +63,20 @@ function! s:fzf_dir_worker(bang, directory, opts)
 	" echom a:directory
 	" let a:opts.source = 'echo -e ".\n..\n/\n~/" && cd "' . a:directory . '" && ls --group-directories-first -Q1 "' . a:directory . '" | xargs -L 1 readlink -f --'
 	" let a:opts.source = 'echo -e ".\n..\n/\n~/" && ls --group-directories-first -a "' . a:directory . '"'
-	let a:opts.source = 'echo -e "/\n~/" && ls --group-directories-first -a "' . a:directory . '"'
+	" let a:opts.source = 'echo -e "/\n~/" && ls --group-directories-first -a "' . a:directory . '"'
+	let a:opts.source = 'ls --group-directories-first -aA "' . a:directory . '"'
 	let directory = a:directory
+	if directory =~ '/$' && directory != '/'
+		let directory = directory[:-2]
+	else
+		let directory = directory
+	endif
+	" echom 'directory first'
+	" echom directory
 	let bang = a:bang
 	let opts = a:opts
-	let a:opts['sink*'] = {val -> s:fzf_dir_sink(a:directory, val, a:bang, a:opts)}
-	let prompt = a:directory
+	let a:opts['sink*'] = {val -> s:fzf_dir_sink(directory, val, a:bang, a:opts)}
+	let prompt = directory
 	" let prompt = a:directory
 	if prompt !~ "/$"
 		let prompt = prompt . '/'
@@ -78,13 +95,17 @@ function! s:fzf_dir_worker(bang, directory, opts)
 	endif
 	call add(a:opts.options, '--prompt')
 	call add(a:opts.options, prompt)
+	let l:i = index(a:opts.options, '--print-query')
+	if (l:i == -1)
+		call add(a:opts.options, '--print-query')
+	endif
 	" echom a:opts.options
 	" echom map(a:opts.options, 'v:val =~ "--expect"')
 	let l:i = index(map(copy(a:opts.options), 'v:val =~ "--expect"'), 1)
-	if (l:i >= 0)
-		call remove(a:opts.options, l:i)
+	if (l:i == -1)
+		" call remove(a:opts.options, l:i)
+		call add(a:opts.options, '--expect=' . join(keys(g:fzf_dir_actions), ','))
 	endif
-	call add(a:opts.options, '--expect=' . join(keys(g:fzf_dir_actions), ','))
 	" echom a:opts.options
 	" echom a:opts
 	call fzf#run(fzf#wrap('FzfDir', fzf#vim#with_preview(a:opts), a:bang))
@@ -96,7 +117,8 @@ function! fzf_dir#dir#fzf_directory(force_regular, bang, ...)
 	if len(a:1) >= 1
 		let directory = fnamemodify(a:1, ':p')
 	else
-		let directory = len(git_project_folder) == 0 ? getcwd() : git_project_folder
+		" let directory = len(git_project_folder) == 0 ? getcwd() : git_project_folder
+		let directory = len(git_project_folder) == 0 ? expand('%:p:h') : git_project_folder
 	endif
 	if !a:force_regular && len(a:1) == 0 && len(git_project_folder) > 0
 		" call fzf#vim#gitfiles(a:bang)
