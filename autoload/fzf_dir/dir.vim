@@ -7,8 +7,13 @@ if !exists('g:fzf_dir_actions')
 	let g:fzf_dir_actions = {
 	  \ 'ctrl-t': 'tab split',
 	  \ 'ctrl-x': 'split',
-	  \ 'ctrl-v': 'vsplit'
+	  \ 'ctrl-v': 'vsplit',
+	  \ 'ctrl-6': 'edit',
 	  \ } 
+endif
+
+if !exists('g:fzf_dir_new_file_keys')
+	let g:fzf_dir_new_file_keys = [ 'ctrl-6' ]
 endif
 
 function! s:fzf_dir_sink(directory, val, bang, opts)
@@ -22,8 +27,10 @@ function! s:fzf_dir_sink(directory, val, bang, opts)
 	" echom a:val
 	if len(a:val) >= 1
 		let argument = remove(a:val, 0)
+		let no_match_found = 0
 	else
 		let argument = ''
+		let no_match_found = 1
 	endif
 	" echom argument
 
@@ -39,7 +46,14 @@ function! s:fzf_dir_sink(directory, val, bang, opts)
 		endif
 		let fname = fnamemodify(directory, ':h:p')
 	else
-		let fname = fnamemodify((a:directory == '/' ? '' : a:directory). '/' . argument, ':p')
+		echom 'key'
+		echom k
+		if no_match_found || index(g:fzf_dir_new_file_keys, k) >= 0
+			echom 'Here'
+			let fname = fnamemodify((a:directory == '/' ? '' : a:directory). '/' . query, ':p')
+		else
+			let fname = fnamemodify((a:directory == '/' ? '' : a:directory). '/' . argument, ':p')
+		endif
 		" echom fname
 		" let fname = fnamemodify(argument, ':p')
 	endif
