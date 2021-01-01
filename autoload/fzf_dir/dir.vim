@@ -1,6 +1,7 @@
 " let g:fzf_dir_gitfiles_command = 'GFiles?'
 if !exists('g:fzf_dir_gitfiles_command')
-	let g:fzf_dir_gitfiles_command = 'GFiles'
+	" let g:fzf_dir_gitfiles_command = 'GFiles'
+	let g:fzf_dir_gitfiles_command = 'Files'
 endif
 
 if !exists('g:fzf_dir_actions')
@@ -127,19 +128,22 @@ function! s:fzf_dir_worker(bang, directory, opts)
 endfunction
 
 function! fzf_dir#dir#fzf_directory(force_regular, bang, ...)
-	let git_project_folder = system('git rev-parse --show-toplevel 2> /dev/null')[:-2]
+	let git_project_folder = system('cd "' . expand('%:p:h') . '" && git rev-parse --show-toplevel 2> /dev/null')[:-2]
 	if len(a:1) >= 1
 		let directory = fnamemodify(a:1, ':p')
 	else
 		" let directory = len(git_project_folder) == 0 ? getcwd() : git_project_folder
-		let directory = len(git_project_folder) == 0 ? expand('%:p:h') : git_project_folder
+		" let directory = len(git_project_folder) == 0 ? expand('%:p:h') : git_project_folder
+		let directory = expand('%:p:h')
 	endif
 	if !a:force_regular && len(a:1) == 0 && len(git_project_folder) > 0
 		" call fzf#vim#gitfiles(a:bang)
 		if g:fzf_dir_gitfiles_command == 'GFiles?'
 			execute 'GFiles' . (a:bang ? '!' : '') . '?'
 		else
-			execute g:fzf_dir_gitfiles_command . (a:bang ? '!' : '')
+            " echom git_project_folder
+            " echom g:fzf_dir_gitfiles_command . (a:bang ? '!' : '') . ' ' . git_project_folder
+			execute g:fzf_dir_gitfiles_command . (a:bang ? '!' : '') . ' ' . git_project_folder
 		endif
 	else
 		let opts = {}
